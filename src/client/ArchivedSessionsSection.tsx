@@ -66,6 +66,7 @@ interface SessionDetails {
   sizeBytes: number | null
   createdAt: number | null
   updatedAt: number | null
+  messages: readonly { role: 'user' | 'assistant'; text: string }[]
   files: readonly FileEntry[]
   stats: {
     turns: number
@@ -665,6 +666,19 @@ export function ArchivedSessionsSection({ useSessions, useWorkspaces, refresh, t
                   <div className={css.detailItem} key={label}>
                     <span className={css.detailLabel}>{label}</span>
                     <span>{value}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className={css.detailSection}>{t('transcript')}</div>
+            {(data.messages ?? []).length === 0 ? (
+              <div className={css.hint}>{t('noTranscript')}</div>
+            ) : (
+              <div className={css.transcript}>
+                {(data.messages ?? []).map((m, index) => (
+                  <div className={css.msg} key={index}>
+                    <span className={css.msgRole}>{m.role === 'user' ? t('roleUser') : t('roleAssistant')}</span>
+                    <span className={css.msgText}>{m.text}</span>
                   </div>
                 ))}
               </div>

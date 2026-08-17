@@ -1,9 +1,10 @@
 /**
- * Per-session detail snapshot: size, activity stats, produced files, and
- * lineage. Reading is lenient — strict `inspect` first, then a raw-artifact
- * fallback that skips unknown records so a log written by a newer Harness
- * still renders counts instead of failing. Response fields are bounded
- * (fetches ≤ 50, files ≤ 200) so huge sessions stay cheap to serialize.
+ * Per-session detail snapshot: size, activity stats, a bounded read-only
+ * message transcript, produced files, and lineage. Reading is lenient — strict
+ * `inspect` first, then a raw-artifact fallback that skips unknown records so a
+ * log written by a newer Harness still renders counts instead of failing.
+ * Response fields are bounded (messages ≤ 50, fetches ≤ 50, files ≤ 200) so
+ * huge sessions stay cheap to serialize.
  */
 import { stat } from 'node:fs/promises'
 import { decodeStorageRecord } from '@deepseek-ai/dsh-session'
@@ -23,6 +24,13 @@ const FETCH_TOOL_RE = /search|fetch|download|browse/i
 /** Response bounds: only the first N fetches/files are returned. */
 const MAX_FETCHES = 50
 const MAX_FILES = 200
+const MAX_MESSAGES = 50
+
+/** One user/assistant message in the read-only transcript preview. */
+export interface MessagePreview {
+  readonly role: 'user' | 'assistant'
+  readonly text: string
+}
 
 /** Inspect leniently: strict read first, raw-artifact fallback that skips unknown records. */
 async function lenientInspect(
@@ -59,6 +67,7 @@ export interface SessionDetails {
   readonly sizeBytes: number | null
   readonly createdAt: number | null
   readonly updatedAt: number | null
+  readonly messages: readonly MessagePreview[]
   readonly files: readonly { path: string; tool: string }[]
   readonly stats: {
     readonly turns: number
@@ -85,6 +94,19 @@ function fetchQuery(data: unknown): string | undefined {
     if (typeof value === 'string' && value !== '') return value
   }
   return undefined
+}
+
+/** Join the text blocks of a message's content into one trimmed string. */
+function messageText(content: unknown): string {
+  if (!Array.isArray(content)) return ''
+  const parts: string[] = []
+  for (const block of content) {
+    if (block !== null && typeof block === 'object' && (block as { type?: unknown }).type === 'text') {
+      const text = (block as { text?: unknown }).text
+      if (typeof text === 'string' && text !== '') parts.push(text)
+    }
+  }
+  return parts.join('\n').trim()
 }
 
 /** Build the detail snapshot for one session. */
@@ -141,6 +163,7 @@ export async function buildDetails(ctx: PluginContext, sessionId: string): Promi
   }
   const turnSeen = new Set<number>()
   const stepSeen = new Set<number>()
+  const messages: MessagePreview[] = []
 
   for (const event of events) {
     if (typeof event.time === 'number' && event.time > lastTime) lastTime = event.time
@@ -152,15 +175,21 @@ export async function buildDetails(ctx: PluginContext, sessionId: string): Promi
       case 'step/start':
         if (typeof data?.step === 'number') stepSeen.add(data.step)
         break
-      case 'user/message':
+      case 'user/message': {
         stats.userMessages++
+        const text = messageText(data?.content)
+        if (text !== '') messages.push({ role: 'user', text })
         if (Array.isArray(data?.content)) {
           for (const block of data.content as { type?: string }[]) if (block?.type === 'image') stats.attachments++
         }
         break
-      case 'assistant/message':
+      }
+      case 'assistant/message': {
         stats.assistantMessages++
+        const text = messageText((data?.message as { content?: unknown } | undefined)?.content)
+        if (text !== '') messages.push({ role: 'assistant', text })
         break
+      }
       case 'tool/call': {
         stats.toolCalls++
         const name = typeof data?.name === 'string' ? data.name : 'tool'
@@ -184,6 +213,7 @@ export async function buildDetails(ctx: PluginContext, sessionId: string): Promi
   stats.steps = stepSeen.size
   if (stats.fetches.length > MAX_FETCHES) stats.fetches = stats.fetches.slice(0, MAX_FETCHES)
   const files = [...fileSet.entries()].map(([path, tool]) => ({ path, tool })).slice(0, MAX_FILES)
+  const transcript = messages.slice(-MAX_MESSAGES)
 
   const lineage: { parentSessionId: string | null; children: readonly string[] } = {
     parentSessionId: typeof meta?.parentSession === 'string' ? meta.parentSession : null,
@@ -209,6 +239,7 @@ export async function buildDetails(ctx: PluginContext, sessionId: string): Promi
     sizeBytes,
     createdAt: typeof meta?.createdAt === 'number' ? meta.createdAt : null,
     updatedAt: lastTime || null,
+    messages: transcript,
     files,
     stats,
     lineage,
