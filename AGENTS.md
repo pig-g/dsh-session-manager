@@ -68,8 +68,8 @@ gitignored. Run `pnpm run build` before `vitest` so tests resolve `../lib/*.js`.
   `tsdown`). Use `import type` for type-only imports.
 - **Strict TypeScript**: every module/export has a concise JSDoc; no implicit `any`. Keep the
   `src/types.ts` structural types narrow — only members this plugin actually calls.
-- **User-facing copy is Chinese** in host error messages (the client shows `error.message` raw);
-  code comments are English.
+- **User-facing host error messages are English** (the client shows `error.message` raw, and the
+  client's own copy stays localized); code comments are English.
 - **Tests describe behavior, not correctness.** Prefer a spec for every behavior change to the
   destructive path (delete/delete-file/fence), and run `pnpm test` before finishing.
 - **Single serialization concern**: prefer any future public registry mutation primitive (which

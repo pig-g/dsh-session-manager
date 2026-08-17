@@ -63,7 +63,7 @@ export async function deleteSessionSingle(ctx: PluginContext, sessionId: string)
 
   const meta = await findSessionMeta(ctx, sessionId)
   if (meta === undefined) {
-    throw httpError(404, 'session-not-found', '找不到该会话的记录（会话不存在）')
+    throw httpError(404, 'session-not-found', 'Session not found')
   }
 
   // Preferred: a future public deleteSession handles accounting + archive
@@ -112,7 +112,7 @@ export async function deleteSession(ctx: PluginContext, sessionId: string): Prom
 
   const agent = agents?.get(sessionId)
   if (agent !== undefined && agent.status === 'running') {
-    throw httpError(409, 'session-busy', '会话正在运行，无法删除；请先停止该会话')
+    throw httpError(409, 'session-busy', 'Session is still running; stop it before deleting')
   }
 
   const attached = sessions?.get(sessionId)
@@ -120,7 +120,7 @@ export async function deleteSession(ctx: PluginContext, sessionId: string): Prom
     if (typeof sessions?.remove === 'function') {
       await sessions.remove(sessionId)
     } else {
-      throw httpError(409, 'session-attached', '会话仍在内存中加载，无法安全删除；请完全关闭该会话或重启应用后再试')
+      throw httpError(409, 'session-attached', 'Session is still loaded in memory and cannot be safely deleted; fully close it or restart the app and try again')
     }
   }
 

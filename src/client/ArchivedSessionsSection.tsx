@@ -359,7 +359,7 @@ export function ArchivedSessionsSection({ useSessions, useWorkspaces, refresh, t
     if (failCount > 0) {
       const firstFail = results.find((r) => r.status === 'rejected')
       const detail = firstFail && firstFail.reason instanceof Error ? firstFail.reason.message : ''
-      throw new Error(t('batchResult').replace('{ok}', String(okCount)).replace('{fail}', String(failCount)) + (detail ? `：${detail}` : ''))
+      throw new Error(t('batchResult').replace('{ok}', String(okCount)).replace('{fail}', String(failCount)) + (detail ? `: ${detail}` : ''))
     }
     return okCount
   }
@@ -607,7 +607,7 @@ export function ArchivedSessionsSection({ useSessions, useWorkspaces, refresh, t
       const failed = results.filter((r) => r.status === 'rejected')
       if (failed.length > 0) {
         const detail = failed[0].reason instanceof Error ? failed[0].reason.message : ''
-        throw new Error(t('batchResult').replace('{ok}', String(targets.length - failed.length)).replace('{fail}', String(failed.length)) + (detail ? `：${detail}` : ''))
+        throw new Error(t('batchResult').replace('{ok}', String(targets.length - failed.length)).replace('{fail}', String(failed.length)) + (detail ? `: ${detail}` : ''))
       }
       setSelectedFiles(new Set())
       const value = await api('details', { sessionId: row.id })

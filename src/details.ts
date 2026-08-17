@@ -36,7 +36,7 @@ async function lenientInspect(
     if (typeof persistence.readRaw !== 'function') throw error
     const raw = await persistence.readRaw(sessionId, signal)
     if (raw === undefined) {
-      throw httpError(404, 'session-not-found', '找不到该会话的记录（会话不存在）')
+      throw httpError(404, 'session-not-found', 'Session not found')
     }
     const events: SessionEvent[] = []
     for (const line of raw.content.split('\n')) {
@@ -102,7 +102,7 @@ export async function buildDetails(ctx: PluginContext, sessionId: string): Promi
     if (persistence === undefined) throw new Error('session persistence is not available')
     const inspected = await lenientInspect(persistence, sessionId)
     if (inspected.meta === undefined) {
-      throw httpError(404, 'session-not-found', '找不到该会话的记录（会话不存在）')
+      throw httpError(404, 'session-not-found', 'Session not found')
     }
     meta = inspected.meta
     events = inspected.events
