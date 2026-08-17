@@ -59,6 +59,27 @@ pnpm test               # tsc + vitest run
 
 `lib/` is committed so tarball installs work without a build step; `pnpm run build` regenerates both `lib/index.js` and `lib/client.js` from `src/`.
 
+### Client typecheck (optional — needs the harness workspace)
+
+The browser half only typechecks against `react` + the `@deepseek-ai/dsh-client-*`
+type packages, which pnpm hoists inside the DeepSeek Harness workspace but not in a
+standalone checkout. The `tsdown` build already validates transpilation, so this is
+optional; run it when you edit `src/client/` and want full type feedback.
+
+1. Temporarily add the fork to `deepseek-harness/pnpm-workspace.yaml`:
+
+   ```yaml
+   packages:
+     - ../dsh-session-manager
+   ```
+
+2. In this repo's `package.json`, temporarily set the `@deepseek-ai/*`
+   `peerDependencies` to `workspace:^` so pnpm links the workspace types instead of
+   the unpublished `0.1.0-rc.6` ranges.
+3. From the harness root: `pnpm install`.
+4. From this repo: `pnpm exec tsc -p tsconfig.client.json`.
+5. Fix the reported errors, then revert steps 1–2.
+
 ### Layout
 
 ```
