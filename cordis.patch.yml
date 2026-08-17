@@ -1,0 +1,4 @@
+# dsh-session-manager bundle patch: mounts the plugin as one cordis loader entry.
+- insert:
+    - id: dsh-session-manager
+      name: 'dsh-session-manager'

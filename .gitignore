@@ -1,0 +1,12 @@
+# Dependencies (this repo symlinks into the harness monorepo for local dev)
+# No trailing slash: the local entry is a symlink, which git sees as a file.
+node_modules
+
+# Build/test residue
+coverage/
+*.log
+*.tsbuildinfo
+
+# OS/editor junk
+.DS_Store
+Thumbs.db
