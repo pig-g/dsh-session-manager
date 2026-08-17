@@ -23,6 +23,7 @@
 .subagentToggleOpen{transform:rotate(90deg)}
 .empty{color:var(--dsw-alias-label-tertiary);padding:18px 8px;font-size:13px;line-height:18px}
 .error{color:var(--dsw-alias-state-error-primary);margin-top:4px;font-size:12px;line-height:18px}
+.success{color:var(--dsw-alias-state-success-primary,var(--dsw-alias-label-primary));margin-top:4px;font-size:12px;line-height:18px}
 .hint{color:var(--dsw-alias-label-tertiary);font-size:12px;line-height:18px}
 .chevron{cursor:pointer;color:var(--dsw-alias-label-tertiary);background:0 0;border:none;border-radius:50%;width:20px;height:20px;flex:none;justify-content:center;align-items:center;padding:0;display:inline-flex;transition:transform .15s var(--ds-ease-in-out)}
 .chevron:hover{background:var(--dsw-alias-interactive-bg-hover)}

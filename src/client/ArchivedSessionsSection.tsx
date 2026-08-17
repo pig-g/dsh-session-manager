@@ -367,6 +367,7 @@ export function ArchivedSessionsSection({ useSessions, useWorkspaces, refresh, t
   const [dragMode, setDragMode] = useState<boolean | null>(null)
   const [deleting, setDeleting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [detailsCache, setDetailsCache] = useState<Map<string, SessionDetails>>(() => new Map())
@@ -484,12 +485,14 @@ export function ArchivedSessionsSection({ useSessions, useWorkspaces, refresh, t
   const confirmDelete = async () => {
     if (deleting || selectedCount === 0) return
     const targets = selectableIds.filter((id) => selected.has(id))
+    setConfirmOpen(false)
     setDeleting(true)
     setError(null)
+    setSuccess(null)
     try {
       await runBatch('delete', targets)
       setSelected(new Set())
-      setConfirmOpen(false)
+      setSuccess(t('deleteDone').replace('{n}', String(targets.length)))
       setDetailsCache((prev) => {
         const next = new Map(prev)
         for (const id of targets) next.delete(id)
@@ -520,12 +523,14 @@ export function ArchivedSessionsSection({ useSessions, useWorkspaces, refresh, t
   const archiveSelected = async () => {
     if (archiving || selectedCount === 0) return
     const targets = selectableIds.filter((id) => selected.has(id))
+    setArchiveConfirmOpen(false)
     setArchiving(true)
     setError(null)
+    setSuccess(null)
     try {
       await runBatch('archive', targets)
       setSelected(new Set())
-      setArchiveConfirmOpen(false)
+      setSuccess(t('archiveDone').replace('{n}', String(targets.length)))
       setDetailsCache((prev) => {
         const next = new Map(prev)
         for (const id of targets) next.delete(id)
@@ -544,9 +549,11 @@ export function ArchivedSessionsSection({ useSessions, useWorkspaces, refresh, t
     const targets = selectableIds.filter((id) => selected.has(id))
     setArchiving(true)
     setError(null)
+    setSuccess(null)
     try {
       await runBatch('unarchive', targets)
       setSelected(new Set())
+      setSuccess(t('unarchiveDone').replace('{n}', String(targets.length)))
       setDetailsCache((prev) => {
         const next = new Map(prev)
         for (const id of targets) next.delete(id)
@@ -820,6 +827,7 @@ export function ArchivedSessionsSection({ useSessions, useWorkspaces, refresh, t
           <IconFolderOpenOutline16 size={14} /> {t('openFolder')}
         </Button>
       </div>
+      {success !== null && <div className={css.success} role="status">{success}</div>}
       {error !== null && <div className={css.error} role="alert">{error}</div>}
       {workspaceError !== null && workspaceError !== undefined && (
         <div className={css.error} role="alert">
