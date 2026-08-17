@@ -1,0 +1,20 @@
+{
+  // Browser-half compiler shape (typecheck only; tsdown bundles lib/client.js).
+  // Mirrors the harness's tsconfig.base.client.json: React automatic JSX,
+  // browser libs, no ambient node types.
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "types": [],
+    "strict": true,
+    "noImplicitAny": true,
+    "allowImportingTsExtensions": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": ["src/client"]
+}

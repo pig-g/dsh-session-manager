@@ -34,6 +34,7 @@ An installable DeepSeek Harness web plugin that adds a **Session manager** secti
 2. **No private-member reach.** The original called the TypeScript-`private` `workspaceRegistry.requireState`/`setState` (which only "worked" by type erasure). This fork uses public primitives only and degrades cleanly where none exist.
 3. **No re-derived storage layout.** Both delete and open-folder resolve the session directory from the backend-authoritative `sessionPersistence.locate()`, so the plugin cannot drift when the Harness changes its on-disk layout.
 4. **TypeScript source + tests.** The host half is `src/*.ts` with a `tsc` build and a `vitest` suite.
+5. **Client half reconstructed to source.** The Settings panel is now `src/client/*.tsx` (React + a CSS module), built by `tsdown` into the `__ModuleLoader__` bundle — no more hand-carried prebuilt `lib/client.js`.
 
 ### Install
 
@@ -51,12 +52,12 @@ Restart the web app — **Session manager** appears in Settings. No config keys 
 
 ```sh
 pnpm install            # installs dev toolchain
-pnpm run typecheck      # tsc --noEmit
-pnpm run build          # tsc → lib/index.js + lib/*.d.ts
+pnpm run typecheck      # tsc --noEmit (host half)
+pnpm run build          # tsc (host) && tsdown (client) → lib/
 pnpm test               # tsc + vitest run
 ```
 
-`lib/` is committed so tarball installs work without a build step; `pnpm run build` regenerates it from `src/`.
+`lib/` is committed so tarball installs work without a build step; `pnpm run build` regenerates both `lib/index.js` and `lib/client.js` from `src/`.
 
 ### Layout
 
@@ -69,8 +70,12 @@ src/
   details.ts    lenient inspect + per-session detail snapshot
   handlers.ts   deleteFile (workspace-scoped) + openSessionFolder
   types.ts      minimal structural service types
-lib/
-  client.js     prebuilt browser bundle (presentation half)
+  client/
+    index.ts                  apply/inject + slots.register + locale register
+    ArchivedSectionsSection.tsx   the panel component
+    ArchivedSessions.module.css    CSS module
+    locales.ts                zh/en dictionaries
+lib/            committed build output (index.js + client.js + .d.ts)
 tests/          fence / delete / registry specs
 ```
 
@@ -84,7 +89,7 @@ tests/          fence / delete / registry specs
 - **Unarchive is `501 unsupported` on a stock Harness** — there is no public unarchive primitive upstream yet. Archive works; unarchive activates automatically once `workspaceRegistry.unarchiveSession` exists.
 - **Deleting an archived session may leave an orphan id in the official archive set** (no public remove-from-archive primitive). Cosmetic only; the client tolerates missing ids.
 - **Delete refuses still-loaded sessions.** Stop the session fully (or restart the web app) so it becomes cold before deleting.
-- **Client half is a prebuilt bundle** (`lib/client.js`), carried over from the original and verified against the current client runtime. Reconstructing it to `src/client/` `.tsx` is a tracked follow-up.
+- **Client typecheck requires the harness workspace.** The browser half builds via `tsdown` (which needs no client type packages), but a full `tsc` typecheck of `src/client/` needs `react` + the `@deepseek-ai/dsh-client-*` types, which are only hoisted inside the DeepSeek Harness workspace.
 
 ### License
 

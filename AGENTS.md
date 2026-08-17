@@ -22,12 +22,13 @@ browser half that renders the Settings "Session manager" panel. It is a maintain
 4. **Capability-gated degradation.** Features that need a core primitive that upstream does not yet
    expose (`unarchiveSession`, `deleteSession`, `sessions.remove`) must degrade to a clear `501
    unsupported` / documented no-op, not reach for private state.
-5. **Keep the `/archived/api` wire contract stable.** The prebuilt `lib/client.js` depends on the
-   route (`/archived/api/<method>`), the POST+JSON request shape, and the `{ ok, value | error }`
-   response envelope. Changing any of these requires a matching client change in the same commit.
-6. **The client half is a prebuilt bundle.** `lib/client.js` is carried from the original and is the
-   source of truth until it is reconstructed to `src/client/` `.tsx`. Do not hand-edit it casually;
-   if you must, rebuild/verify the full bundle and bump a note in `README.md`.
+5. **Keep the `/archived/api` wire contract stable.** The client (`src/client/`, bundled to
+   `lib/client.js`) depends on the route (`/archived/api/<method>`), the POST+JSON request shape,
+   and the `{ ok, value | error }` response envelope. Changing any of these requires a matching
+   client change in the same commit.
+6. **The client half is source.** The browser panel lives in `src/client/` (`.tsx` components, a
+   `.module.css`, and `locales.ts`) and is built by `tsdown` into `lib/client.js`. Edit `src/client/`
+   and rebuild — never hand-edit the emitted bundle.
 
 ## Layout
 
@@ -40,15 +41,20 @@ src/            host half (TypeScript, the reviewed source)
   details.ts    lenient inspect + detail snapshot
   handlers.ts   deleteFile + openSessionFolder
   types.ts      minimal structural service types (types only)
-lib/            committed build output (client.js is hand-carried; *.js/*.d.ts from tsc)
+src/client/     browser half (built by tsdown)
+  index.ts                  apply/inject + slots.register + locale register
+  ArchivedSectionsSection.tsx
+  ArchivedSessions.module.css
+  locales.ts
+lib/            committed build output (index.js from tsc; client.js from tsdown)
 tests/          vitest specs (node env, import built lib/*.js)
 ```
 
 ## Commands
 
 ```sh
-pnpm run typecheck   # tsc --noEmit — strict, noImplicitAny
-pnpm run build       # tsc → lib/index.js + lib/*.d.ts
+pnpm run typecheck   # tsc --noEmit — host half (strict, noImplicitAny)
+pnpm run build       # tsc (host → lib/index.js) && tsdown (client → lib/client.js)
 pnpm test            # tsc && vitest run
 ```
 
@@ -57,8 +63,9 @@ gitignored. Run `pnpm run build` before `vitest` so tests resolve `../lib/*.js`.
 
 ## Conventions
 
-- **ESM everywhere** (`"type": "module"`). Local relative imports use **`.js`** extensions
-  (NodeNext emit keeps them); use `import type` for type-only imports.
+- **ESM everywhere** (`"type": "module"`). Host local imports use **`.js`** extensions (NodeNext
+  `tsc` emit); client local imports use **`.ts`/`.tsx`** extensions (bundler resolution under
+  `tsdown`). Use `import type` for type-only imports.
 - **Strict TypeScript**: every module/export has a concise JSDoc; no implicit `any`. Keep the
   `src/types.ts` structural types narrow — only members this plugin actually calls.
 - **User-facing copy is Chinese** in host error messages (the client shows `error.message` raw);

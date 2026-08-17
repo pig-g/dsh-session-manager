@@ -30,7 +30,7 @@
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc && tsdown",
     "typecheck": "tsc --noEmit",
     "test": "tsc && vitest run"
   },
@@ -56,6 +56,9 @@
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
+    "@types/react": "^18.3.12",
+    "lightningcss": "^1.28.2",
+    "tsdown": "^0.7.0",
     "typescript": "^5.6.3",
     "vitest": "^2.1.8"
   },

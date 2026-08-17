@@ -19,5 +19,6 @@
       "@deepseek-ai/dsh-session": ["./../deepseek-harness/packages/core/session/lib/types/index.d.ts"]
     }
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["src/client"]
 }
