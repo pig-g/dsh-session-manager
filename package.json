@@ -38,7 +38,7 @@
   "author": "Zephyr-vibe (original dsh-archived-sessions); maintained fork",
   "repository": {
     "type": "git",
-    "url": "https://github.com/Zephyr-vibe/dsh-archived-sessions.git"
+    "url": "https://github.com/pig-g/dsh-session-manager.git"
   },
   "peerDependencies": {
     "@deepseek-ai/cordis": "^4.0.1",
